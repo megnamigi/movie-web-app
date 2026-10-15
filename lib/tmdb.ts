@@ -8,6 +8,7 @@ export type MovieSummary = {
   backdrop_path: string | null;
   overview: string;
   vote_average: number;
+  release_date?: string;
 };
 
 export type MovieListResponse = {
@@ -39,11 +40,11 @@ export async function getMovieGenres() {
   return response.data.genres;
 }
 
-export async function getMoviesByGenre(genreId: number, page = 1) {
+export async function getMoviesByGenre(genreId: number | number[], page = 1) {
   const response = await tmdb.get<MovieListResponse>("/discover/movie", {
     params: {
       language: "en-US",
-      with_genres: genreId,
+      with_genres: Array.isArray(genreId) ? genreId.join(",") : genreId,
       sort_by: "popularity.desc",
       include_adult: false,
       include_video: false,

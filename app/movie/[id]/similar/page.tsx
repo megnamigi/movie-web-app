@@ -14,16 +14,19 @@ export default async function SimilarMoviesPage({ params, searchParams }: Props)
   if (!/^[1-9]\d*$/.test(id)) notFound();
 
   const query = await searchParams;
-  const page = parseMoviePage(query.page);
-  const [movie, data] = await Promise.all([
+  const page = parseMoviePage(query.page, MAX_MOVIE_PAGES * 2);
+  const [, response] = await Promise.all([
     getMovieDetails(id),
-    getSimilarMovies(id, page),
+    getSimilarMovies(id, Math.ceil(page / 2)),
   ]).catch((error: unknown) => {
     if (isAxiosError(error) && error.response?.status === 404) notFound();
     throw error;
   });
+  const totalPages = Math.ceil(Math.min(response.total_results, response.total_pages * 20) / 10);
+  const offset = (page - 1) % 2 * 10;
+  const data = { ...response, page, total_pages: totalPages, results: response.results.slice(offset, offset + 10) };
   const basePath = `/movie/${id}/similar`;
-  const lastPage = Math.max(1, Math.min(data.total_pages, MAX_MOVIE_PAGES));
+  const lastPage = Math.max(1, Math.min(data.total_pages, MAX_MOVIE_PAGES * 2));
 
   if (page > lastPage) {
     redirect(lastPage === 1 ? basePath : `${basePath}?page=${lastPage}`);
@@ -31,10 +34,10 @@ export default async function SimilarMoviesPage({ params, searchParams }: Props)
 
   return (
     <MovieListPage
-      title={`More like ${movie.title}`}
+      title="More like this"
+      maxPages={MAX_MOVIE_PAGES * 2}
       data={data}
       basePath={basePath}
-      backLink={{ href: `/movie/${id}`, label: "Back to movie" }}
     />
   );
 }

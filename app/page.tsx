@@ -27,8 +27,8 @@ function MovieSection({
   href: string;
 }) {
   return (
-    <section className="mb-[52px]">
-      <div className="mb-8 flex items-center justify-between">
+    <section className="mb-12 last:mb-0 sm:mb-[52px]">
+      <div className="mb-9 flex items-center sm:mb-8 justify-between">
         <h2 className="text-2xl font-semibold">
           {title}
         </h2>
@@ -41,7 +41,7 @@ function MovieSection({
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-5 lg:gap-8">
+      <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 sm:gap-6 lg:grid-cols-5 lg:gap-8">
         {movies.slice(0, 10).map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
         ))}
@@ -65,7 +65,7 @@ export default async function Home() {
       <HeroBanner movies={nowPlaying.results.slice(0, 5)} />
 
       <main className="w-full flex-1 bg-background text-foreground">
-        <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 sm:py-12">
+        <div className="mx-auto max-w-[1440px] px-5 pb-8 pt-12 sm:px-6 sm:py-12">
 
           <MovieSection
             title="Upcoming"

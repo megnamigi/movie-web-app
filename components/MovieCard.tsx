@@ -13,7 +13,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
   return (
     <Link
       href={`/movie/${movie.id}`}
-      className="block overflow-hidden rounded-lg bg-muted transition-transform duration-200 hover:scale-[1.02]"
+      className="block overflow-hidden rounded-md bg-muted transition-transform duration-200 hover:scale-[1.02]"
     >
       {movie.poster_path ? (
         <img
@@ -25,7 +25,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
         <div role="img" aria-label={`No poster available for ${movie.title}`} className="flex aspect-[2/3] items-center justify-center bg-muted-foreground/15 p-3 text-center text-xs text-muted-foreground">No poster available</div>
       )}
 
-      <div className="min-h-[64px] p-2">
+      <div className="min-h-[76px] p-2 sm:min-h-[64px]">
         <div className="flex items-center gap-1 text-xs">
           <span className="text-yellow-400">★</span>
           <span className="text-foreground">
@@ -34,7 +34,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
           <span className="text-muted-foreground">/10</span>
         </div>
 
-        <h3 className="mt-1 text-sm leading-5 text-foreground">
+        <h3 className="mt-1 line-clamp-2 text-sm leading-5 text-foreground">
           {movie.title}
         </h3>
       </div>
