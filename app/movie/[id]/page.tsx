@@ -1,3 +1,6 @@
+import { isAxiosError } from "axios";
+import { notFound } from "next/navigation";
+import { selectTrailerKey } from "@/lib/trailers";
 import TrailerModal from "@/components/TrailerModal";
 import { getMovieDetails, getSimilarMovies } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
@@ -16,36 +19,15 @@ export default async function MovieDetailsPage({
   params,
 }: Props) {
   const { id } = await params;
-  const movie = await getMovieDetails(id);
-  type Video = {
-  site: string;
-  type: string;
-  official: boolean;
-  key: string;
-};
-
-const videos: Video[] = movie.videos?.results ?? [];
-
-const trailer =
-  videos.find(
-    (video) =>
-      video.site === "YouTube" &&
-      video.type === "Trailer" &&
-      video.official
-  ) ??
-  videos.find(
-    (video) =>
-      video.site === "YouTube" &&
-      video.type === "Trailer"
-  ) ??
-  videos.find(
-    (video) =>
-      video.site === "YouTube" &&
-      video.type === "Teaser"
-  );
-
-  const trailerKey = trailer?.key ?? null;
-  const similarData = await getSimilarMovies(id);
+  if (!/^[1-9]\d*$/.test(id)) notFound();
+  const [movie, similarData] = await Promise.all([
+    getMovieDetails(id),
+    getSimilarMovies(id),
+  ]).catch((error: unknown) => {
+    if (isAxiosError(error) && error.response?.status === 404) notFound();
+    throw error;
+  });
+  const trailerKey = selectTrailerKey(movie.videos?.results ?? []);
 
   const similarMovies = similarData.results
     .filter((movie: { poster_path: string | null }) => movie.poster_path)
@@ -57,35 +39,35 @@ const trailer =
   const minutes = (movie.runtime || 0) % 60;
 
   return (
-    <main className="mx-auto max-w-[1100px] px-6 py-12">
+    <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 py-10 sm:px-6 sm:py-12">
       {/* Movie title and rating */}
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 flex items-start justify-between gap-4 sm:items-end">
         <div>
-          <h1 className="text-3xl font-bold text-black">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
             {movie.title}
           </h1>
 
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {releaseDate} · {movie.adult ? "18+" : "NR"} ·{" "}
             {hours}h {minutes}m
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="text-xs text-gray-500">Rating</p>
+        <div className="shrink-0 text-right">
+          <p className="text-xs text-muted-foreground">Rating</p>
           <p className="text-lg font-semibold">
             <span className="text-yellow-400">★</span>{" "}
             {movie.vote_average.toFixed(1)}/10
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {movie.vote_count} votes
           </p>
         </div>
       </div>
 
       {/* Poster and backdrop */}
-      <div className="grid grid-cols-[1fr_2.6fr] gap-6">
-        <div className="overflow-hidden rounded-lg">
+      <div className="grid grid-cols-[1fr_2fr] gap-3 sm:grid-cols-[1fr_2.6fr] sm:gap-6">
+        <div className="aspect-[2/3] overflow-hidden rounded-lg bg-muted">
           {movie.poster_path && (
             <img
               src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -95,7 +77,7 @@ const trailer =
           )}
         </div>
 
-        <div className="relative overflow-hidden rounded-lg">
+        <div className="relative overflow-hidden rounded-lg bg-muted">
           {movie.backdrop_path && (
             <img
               src={`https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
@@ -104,7 +86,8 @@ const trailer =
             />
           )}
 
-          <div className="absolute bottom-6 left-6 z-10">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
+          <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">
             <TrailerModal
                 trailerKey={trailerKey}
                 title={movie.title}
@@ -117,25 +100,26 @@ const trailer =
       {/* Genres */}
       <div className="mt-6 flex flex-wrap gap-2">
         {movie.genres.map((genre: Genre) => (
-          <span
+          <Link
             key={genre.id}
-            className="rounded-full border border-gray-200 px-3 py-1 text-xs"
+            href={`/genre/${genre.id}`}
+            className="rounded-full border border-border px-3 py-1 text-xs hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             {genre.name}
-          </span>
+          </Link>
         ))}
       </div>
 
       {/* Overview */}
-      <p className="mt-5 text-sm leading-7 text-gray-700">
+      <p className="mt-5 text-sm leading-7 text-muted-foreground">
         {movie.overview}
       </p>
 
       {/* Credits */}
-      <div className="mt-6 divide-y divide-gray-200 border-b border-gray-200">
-        <div className="flex gap-8 py-4 text-sm">
-          <span className="w-24 font-semibold">Director</span>
-          <span className="text-gray-600">
+      <div className="mt-6 divide-y divide-border border-b border-border">
+        <div className="flex gap-4 py-4 text-sm sm:gap-8">
+          <span className="w-20 shrink-0 font-semibold sm:w-24">Director</span>
+          <span className="text-muted-foreground">
             {movie.credits?.crew
               ?.filter(
                 (person: { job: string }) =>
@@ -146,9 +130,9 @@ const trailer =
           </span>
         </div>
 
-        <div className="flex gap-8 py-4 text-sm">
-          <span className="w-24 font-semibold">Writers</span>
-          <span className="text-gray-600">
+        <div className="flex gap-4 py-4 text-sm sm:gap-8">
+          <span className="w-20 shrink-0 font-semibold sm:w-24">Writers</span>
+          <span className="text-muted-foreground">
             {movie.credits?.crew
               ?.filter(
                 (person: { job: string }) =>
@@ -165,9 +149,9 @@ const trailer =
           </span>
         </div>
 
-        <div className="flex gap-8 py-4 text-sm">
-          <span className="w-24 font-semibold">Stars</span>
-          <span className="text-gray-600">
+        <div className="flex gap-4 py-4 text-sm sm:gap-8">
+          <span className="w-20 shrink-0 font-semibold sm:w-24">Stars</span>
+          <span className="text-muted-foreground">
             {movie.credits?.cast
               ?.slice(0, 3)
               .map((person: { name: string }) => person.name)
@@ -185,13 +169,13 @@ const trailer =
 
           <Link
             href={`/movie/${id}/similar`}
-            className="text-sm hover:text-indigo-600"
+            className="text-sm hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             See more →
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5">
           {similarMovies.map((similar: {
             id: number;
             title: string;

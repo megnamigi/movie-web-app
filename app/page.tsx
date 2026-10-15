@@ -1,8 +1,7 @@
 
+import Link from "next/link";
 import HeroBanner from "@/components/HeroBanner";
-import Navbar from "@/components/Navbar";
 import MovieCard from "@/components/MovieCard";
-import Footer from "@/components/Footer";
 
 import {
   getPopularMovies,
@@ -34,15 +33,15 @@ function MovieSection({
           {title}
         </h2>
 
-        <a
+        <Link
           href={href}
           className="flex items-center gap-2 text-sm"
         >
           See more <span>→</span>
-        </a>
+        </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-5 lg:gap-8">
         {movies.slice(0, 10).map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
         ))}
@@ -62,12 +61,11 @@ export default async function Home() {
 
   return (
     <>
-      <Navbar />
 
       <HeroBanner movies={nowPlaying.results.slice(0, 5)} />
 
-      <main className="min-h-screen bg-white text-black">
-        <div className="mx-auto max-w-[1440px] px-6 py-12">
+      <main className="w-full flex-1 bg-background text-foreground">
+        <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 sm:py-12">
 
           <MovieSection
             title="Upcoming"
@@ -90,10 +88,7 @@ export default async function Home() {
         </div>
       </main>
 
-      <Footer />
 
     </>
   );
 }
-
-

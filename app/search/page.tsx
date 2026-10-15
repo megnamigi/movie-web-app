@@ -1,91 +1,30 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import MovieCard from "@/components/MovieCard";
-import { searchMovies } from "@/lib/tmdb";
+import { redirect } from "next/navigation";
+import MovieListPage from "@/components/MovieListPage";
+import { searchMovies, type MovieListResponse } from "@/lib/tmdb";
+import { MAX_MOVIE_PAGES, parseMoviePage } from "@/lib/pagination";
 
-type Movie = {
-  id: number;
-  title: string;
-  poster_path: string | null;
-  vote_average: number;
+type Props = {
+  searchParams: Promise<{ q?: string | string[]; page?: string | string[] }>;
 };
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q } = await searchParams;
-  const query = q?.trim() ?? "";
-
-  const data = query
-    ? await searchMovies(query)
-    : { results: [] };
-
-  const movies: Movie[] = data.results;
-
+export default async function SearchPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const query = typeof params.q === "string" ? params.q.trim() : "";
+  const page = parseMoviePage(params.page);
+  const data: MovieListResponse = query
+    ? await searchMovies(query, page)
+    : { page: 1, results: [], total_pages: 0, total_results: 0 };
+  const basePath = query ? `/search?q=${encodeURIComponent(query)}` : "/search";
+  const lastPage = Math.max(1, Math.min(data.total_pages, MAX_MOVIE_PAGES));
+  if (page > lastPage) {
+    redirect(lastPage === 1 ? basePath : `${basePath}&page=${lastPage}`);
+  }
   return (
-    <>
-      <Navbar />
-
-      <main className="mx-auto min-h-screen max-w-7xl px-6 py-12">
-        <h1 className="mb-8 text-2xl font-bold">
-          {query
-            ? `Search results for "${query}"`
-            : "Search Movies"}
-        </h1>
-
-        {movies.length > 0 ? (
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
-            {movies.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">
-            {query
-              ? "No movies found."
-              : "Enter a movie name to search."}
-          </p>
-        )}
-
-    {/* More like this */}
-
-        <section className="mt-12">
-            <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-black">
-                    More like this
-                </h2>
-
-                <Link
-                    href={`/movie/${id}/similar`}
-                    className="flex items-center gap-2 text-sm text-black hover:text-indigo-600"
-                >
-                    See more
-                    <span>→</span>
-                </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
-                {similarMovies.map(
-                    (similar: {
-                        id: number;
-                        title: string;
-                        poster_path: string | null;
-                        vote_average: number;
-                    }) => (
-                        <MovieCard key={similar.id} movie={similar} />
-                    )
-                )}
-            </div>
-        </section>
-
-      </main>
-
-      <Footer />
-    </>
+    <MovieListPage
+      title={query ? `Search results for "${query}"` : "Search Movies"}
+      data={data}
+      basePath={basePath}
+      emptyMessage={query ? "No movies found. Try another movie name." : "Enter a movie name to search."}
+    />
   );
 }

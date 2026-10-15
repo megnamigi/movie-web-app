@@ -2,7 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
+import TrailerModal from "@/components/TrailerModal";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
 type Movie = {
   id: number;
@@ -35,17 +36,17 @@ export default function HeroBanner({
 
   return (
     <section
-      className="relative w-full h-[600px] bg-cover bg-center text-white"
+      className="relative h-[500px] w-full sm:h-[600px] bg-cover bg-center text-white"
       style={{
         backgroundImage: movie.backdrop_path
           ? `linear-gradient(90deg, rgba(0,0,0,0.65), transparent 75%), url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
           : undefined,
       }}
     >
-      <div className="absolute left-[10%] top-1/2 w-[320px] max-w-[65%] -translate-y-1/2">
+      <div className="absolute left-6 top-1/2 w-[320px] max-w-[calc(100%_-_3rem)] -translate-y-1/2 sm:left-[10%] sm:max-w-[65%]">
         <p className="text-sm">Now Playing:</p>
 
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold sm:text-4xl">
           {movie.title}
         </h1>
 
@@ -64,20 +65,14 @@ export default function HeroBanner({
           {movie.overview}
         </p>
 
-        <button
-          type="button"
-          className="mt-5 flex items-center gap-2 rounded bg-white px-5 py-3 text-sm text-black"
-        >
-          <Play size={16} />
-          Watch Trailer
-        </button>
+        <TrailerModal key={movie.id} movieId={movie.id} title={movie.title} variant="hero" />
       </div>
 
       <button
         type="button"
         onClick={prevMovie}
         aria-label="Previous movie"
-        className="absolute left-4 top-1/2 rounded-full bg-white/90 p-3 text-black"
+        className="absolute bottom-4 left-4 rounded-full sm:bottom-auto sm:top-1/2 bg-white/90 p-3 text-black"
       >
         <ChevronLeft size={20} />
       </button>
@@ -86,7 +81,7 @@ export default function HeroBanner({
         type="button"
         onClick={nextMovie}
         aria-label="Next movie"
-        className="absolute right-6 top-1/2 rounded-full bg-white/90 p-3 text-black"
+        className="absolute bottom-4 right-4 rounded-full sm:bottom-auto sm:right-6 sm:top-1/2 bg-white/90 p-3 text-black"
       >
         <ChevronRight size={20} />
       </button>
@@ -97,6 +92,7 @@ export default function HeroBanner({
             key={item.id}
             type="button"
             aria-label={`Show movie ${index + 1}`}
+            aria-pressed={current === index}
             onClick={() => setCurrent(index)}
             className={`h-2 w-2 rounded-full ${
               current === index
